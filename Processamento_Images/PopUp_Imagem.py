@@ -1,10 +1,8 @@
 import io
 import os
-from io import BytesIO
 import urllib.request
 import PySimpleGUI as sg
 from PIL import Image
-from urllib.request import urlopen
 
 def main():
     sg.theme('DarkTeal9')
@@ -79,42 +77,50 @@ def imageViewer():
             if fileName == "":
                 sg.popup_ok("Preencha um caminho")
             elif os.path.exists(fileName):
-                url = 'https://cdn.wccftech.com/wp-content/uploads/2017/11/windows-10-iphone-1480x897-86x60.png'
-                with urllib.request.urlopen(url) as i:
-                    byteImg = io.BytesIO(i.read())
-                    image = Image.open(byteImg)
-                    image.save('out.png')
+                image = Image.open(fileName)
                 image.thumbnail((500, 500))
                 bio = io.BytesIO()
-                image.save(bio, format="JPEG")
+                image.save(bio, format="PNG")
                 window["imageKey"].update(data = bio.getvalue(), size = (500,500))
+                imagem.save("temp.PNG")
+            else:
+                try:
+                    urllib.request.urlretrieve(fileName,"temp.png")
+                    image = Image.open("temp.png")
+                    image.thumbnail((500, 500))
+                    bio = io.BytesIO()
+                    image.save(bio, format="PNG")
+                    window["imageKey"].update(data = bio.getvalue(), size = (500,500))
+                except:
+                    sg.popup_ok("Não é um link valido")
 
         if event == "Salvar":
             fileName = value["fileKey"]
             if fileName == "":
                 sg.popup_ok("Preencha um caminho")
-            elif value["qualityComb"] == "":
-                sg.popup_ok("Escolhe a qualidade da imagem")
-            elif value["qualityComb"] == "Imagem Original":
-                if value["widthSave"] == "" or value["heigthSave"] == "":
-                    sg.popup_ok("Preencha um tamanho")
-                else:
-                    imagem = Image.open(fileName)
-                    imagem.save("imagem.jpg")
-            elif value["qualityComb"] == "Thumnail":
-                imagem = Image.open(fileName)
-                imagem.save(fileName, format="jpg", optimize=True, quality=1)
-                imagem.thumbnail((75,75))
-                imagem.save("imagem.jpg")
-            elif value["qualityComb"] == "Qualidade Reduzida":
-                if value["widthSave"] == "" or value["heigthSave"] == "":
-                    sg.popup_ok("Preencha um tamanho")
-                else:
-                    imagem = Image.open(fileName)
-                    imagem.save(fileName, format="jpg", optimize=True, quality=1)
-                    imagem = imagem.resize((int(value["widthSave"]),int(value["heigthSave"])))
-                    imagem.save("imagem.jpg")
-            
+            else:
+                try:
+                    imagem = Image.open("temp.png")
+                except:
+                    sg.popup_ok("Carregar uma imagem")
+                
+                if value["qualityComb"] == "":
+                    sg.popup_ok("Escolhe a qualidade da imagem")
+                elif value["qualityComb"] == "Imagem Original":
+                        imagem.save("imagem.PNG")
+                elif value["qualityComb"] == "Thumnail":
+                    imagem.save("temp.png", format="PNG", optimize=True, quality=1)
+                    imagem.thumbnail((75,75))
+                    imagem.save("imagem.PNG")
+                elif value["qualityComb"] == "Qualidade Reduzida":
+                    if value["widthSave"] == "" or value["heigthSave"] == "":
+                        sg.popup_ok("Preencha um tamanho")
+                    else:
+                        imagem.save("temp.png", format="PNG", optimize=True, quality=1)
+                        imagem = imagem.resize((int(value["widthSave"]),int(value["heigthSave"])))
+                        imagem.save("imagem.PNG")
+                
+                os.remove('temp.png')
 
         if event == "qualityComb":
             if value["qualityComb"] == "Imagem Original":
