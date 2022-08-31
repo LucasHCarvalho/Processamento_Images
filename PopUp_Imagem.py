@@ -1,8 +1,63 @@
 import io
 import os
-import urllib.request
+from pickletools import optimize
+import requests
 import PySimpleGUI as sg
 from PIL import Image
+
+def mostrar_imagem(imagem, window):
+    imagem.thumbnail((500,500))
+    bio = io.BytesIO()
+    imagem.save(bio, "PNG")
+    window["imageKey"].update(data=bio.getvalue(), size=(500,500))
+
+def carrega_imagem(filename, window):
+    if os.path.exists(filename):
+        imagem = Image.open(filename)
+        mostrar_imagem(imagem, window)
+
+def abre_url(url, window):
+    imagem = requests.get(url)
+    imagem = Image.open(io.BytesIO(imagem.content))
+    mostrar_imagem(imagem, window) 
+
+def salvar_url(url):
+    imagem = requests.get(url)
+    imagem = Image.open(io.BytesIO(imagem.content))
+    imagem.save("daweb.png", format="PNG", optimize=True)
+
+def Cores(imagemEntrada, imagemSaida, quantidade):
+    imagem = Image.open(imagemEntrada)
+    imagem = imagem.convert("P", palette=Image.Palette.ADAPTIVE, colors=quantidade)
+    imagem.save(imagemSaida)
+
+def BlackWhite(imagemEntrada, imagemSaida):
+    imagem = Image.open(imagemEntrada)
+    imagem = imagem.convert("L")
+    imagem.save(imagemSaida)
+
+def calcula_paleta(branco):
+    paleta = []
+    r, g, b = branco
+
+    for i in range(255):
+        newR = r * i // 255
+        newG = g * i // 255
+        newB = b * i // 255
+        paleta.extend((newR, newG, newB))
+    return paleta
+
+def converte_sepia(input, output):
+    branco = (255, 240, 192)
+    paleta = calcula_paleta(branco)
+
+    imagem = Image.open(input)
+    imagem = imagem.convert("L")
+    imagem.putpalette(paleta)
+
+    sepia = imagem.convert("RGB")
+
+    sepia.save(f"Imagens\{output}")
 
 def main():
     sg.theme('DarkTeal9')
@@ -38,8 +93,20 @@ def main():
                 window.close()
                 imageViewer()
 
-def imageViewer():    
+def imageViewer():
     layout = [
+        [sg.Menu([
+                ['File', 
+                    ['Open', 'Open URL', 'Save', 'Exit',]
+                ],
+                ['Edit', 
+                    ['Paste', 
+                        ['Special', 'Normal',], 
+                    'Undo'],
+                ],
+                ['Help', 'About...']
+                ])
+        ],
         [
             sg.Image(key = "imageKey", size = (500, 500))
         ],
@@ -57,8 +124,7 @@ def imageViewer():
             sg.Combo(['Imagem Original', 'Thumnail', 'Qualidade Reduzida'], key = "qualityComb", enable_events = True),
             sg.Text("Tamanho: "),
             sg.Input(size = (5,1), key = "widthSave"),
-            sg.Input(size = (5,1), key = "heigthSave"),
-            sg.Button("Salvar")
+            sg.Input(size = (5,1), key = "heigthSave")
         ]
     ]
 
@@ -69,32 +135,18 @@ def imageViewer():
     while isScreenOpen: 
         event, value = window.read()
 
-        if event == "Exit" or event == sg.WINDOW_CLOSED:
-            isScreenOpen = False
+        if event == "Open":
+            fileName = sg.popup_get_file('Get file')
+            carrega_imagem(fileName, window)
 
-        if event == "Load image":
-            fileName = value["fileKey"]
-            if fileName == "":
-                sg.popup_ok("Preencha um caminho")
-            elif os.path.exists(fileName):
-                image = Image.open(fileName)
-                image.thumbnail((500, 500))
-                bio = io.BytesIO()
-                image.save(bio, format="PNG")
-                window["imageKey"].update(data = bio.getvalue(), size = (500,500))
-                imagem.save("temp.PNG")
-            else:
-                try:
-                    urllib.request.urlretrieve(fileName,"temp.png")
-                    image = Image.open("temp.png")
-                    image.thumbnail((500, 500))
-                    bio = io.BytesIO()
-                    image.save(bio, format="PNG")
-                    window["imageKey"].update(data = bio.getvalue(), size = (500,500))
-                except:
+        if event == "Open URL":
+            fileName = sg.popup_get_text('Get URL')
+            try:
+                abre_url(fileName,window)
+            except:
                     sg.popup_ok("Não é um link valido")
 
-        if event == "Salvar":
+        if event == "Save":
             fileName = value["fileKey"]
             if fileName == "":
                 sg.popup_ok("Preencha um caminho")
@@ -132,6 +184,10 @@ def imageViewer():
             elif value["qualityComb"] == "Qualidade Reduzida":  
                 window['widthSave'].update(disabled=False)
                 window['heigthSave'].update(disabled=False)
+
+        if event == "Exit" or event == sg.WINDOW_CLOSED:
+            isScreenOpen = False
+
     window.close()
 
 if __name__ == "__main__":
