@@ -5,6 +5,18 @@ import requests
 import PySimpleGUI as sg
 from PIL import Image
 
+def abre_imagem(filename):
+    try:
+        if os.path.exists(filename):
+            imagem = Image.open(filename)
+        else: 
+            imagem = requests.get(filename)
+            imagem = Image.open(io.BytesIO(imagem.content))
+        
+        return imagem
+    except:
+        sg.popup_ok("Carregar uma imagem")
+
 def mostrar_imagem(imagem, window):
     imagem.thumbnail((500,500))
     bio = io.BytesIO()
@@ -17,8 +29,7 @@ def carrega_imagem(filename, window):
         mostrar_imagem(imagem, window)
 
 def abre_url(url, window):
-    imagem = requests.get(url)
-    imagem = Image.open(io.BytesIO(imagem.content))
+    imagem = abre_imagem(url)
     mostrar_imagem(imagem, window) 
 
 def salvar_url(url):
@@ -59,7 +70,7 @@ def converte_sepia(input, output):
 
     sepia.save(f"Imagens\{output}")
 
-def main():
+def escolhe_tema():
     sg.theme('DarkTeal9')
     
     layout = [
@@ -91,9 +102,8 @@ def main():
             sg.theme(values['ThemeList'][0])
             if sg.popup_yes_no("Aplicar esse tema?") == "Yes":
                 window.close()
-                imageViewer()
 
-def imageViewer():
+def main():
     layout = [
         [sg.Menu([
                 ['File', 
@@ -134,6 +144,7 @@ def imageViewer():
 
     while isScreenOpen: 
         event, value = window.read()
+        fileName = ""
 
         if event == "Open":
             fileName = sg.popup_get_file('Get file')
@@ -146,33 +157,25 @@ def imageViewer():
             except:
                     sg.popup_ok("Não é um link valido")
 
-        if event == "Save":
-            fileName = value["fileKey"]
-            if fileName == "":
-                sg.popup_ok("Preencha um caminho")
+        
+        
+        """if value["qualityComb"] == "":
+            sg.popup_ok("Escolhe a qualidade da imagem")
+        elif value["qualityComb"] == "Imagem Original":
+                imagem.save("imagem.PNG")
+        elif value["qualityComb"] == "Thumnail":
+            imagem.save("temp.png", format="PNG", optimize=True, quality=1)
+            imagem.thumbnail((75,75))
+            imagem.save("imagem.PNG")
+        elif value["qualityComb"] == "Qualidade Reduzida":
+            if value["widthSave"] == "" or value["heigthSave"] == "":
+                sg.popup_ok("Preencha um tamanho")
             else:
-                try:
-                    imagem = Image.open("temp.png")
-                except:
-                    sg.popup_ok("Carregar uma imagem")
-                
-                if value["qualityComb"] == "":
-                    sg.popup_ok("Escolhe a qualidade da imagem")
-                elif value["qualityComb"] == "Imagem Original":
-                        imagem.save("imagem.PNG")
-                elif value["qualityComb"] == "Thumnail":
-                    imagem.save("temp.png", format="PNG", optimize=True, quality=1)
-                    imagem.thumbnail((75,75))
-                    imagem.save("imagem.PNG")
-                elif value["qualityComb"] == "Qualidade Reduzida":
-                    if value["widthSave"] == "" or value["heigthSave"] == "":
-                        sg.popup_ok("Preencha um tamanho")
-                    else:
-                        imagem.save("temp.png", format="PNG", optimize=True, quality=1)
-                        imagem = imagem.resize((int(value["widthSave"]),int(value["heigthSave"])))
-                        imagem.save("imagem.PNG")
-                
-                os.remove('temp.png')
+                imagem.save("temp.png", format="PNG", optimize=True, quality=1)
+                imagem = imagem.resize((int(value["widthSave"]),int(value["heigthSave"])))
+                imagem.save("imagem.PNG")
+        
+        os.remove('temp.png')
 
         if event == "qualityComb":
             if value["qualityComb"] == "Imagem Original":
@@ -183,7 +186,7 @@ def imageViewer():
                 window['heigthSave'].update(disabled=True)
             elif value["qualityComb"] == "Qualidade Reduzida":  
                 window['widthSave'].update(disabled=False)
-                window['heigthSave'].update(disabled=False)
+                window['heigthSave'].update(disabled=False)"""
 
         if event == "Exit" or event == sg.WINDOW_CLOSED:
             isScreenOpen = False
