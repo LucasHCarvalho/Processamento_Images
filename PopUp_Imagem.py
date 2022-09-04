@@ -5,7 +5,7 @@ import requests
 import PySimpleGUI as sg
 from PIL import Image
 
-def abre_imagem(filename):
+def OpenImage(filename):
     try:
         if os.path.exists(filename):
             imagem = Image.open(filename)
@@ -15,39 +15,39 @@ def abre_imagem(filename):
         
         return imagem
     except:
-        sg.popup_ok("Carregar uma imagem")
-
+        sg.popup_ok("Fill a path")
+    
 def mostrar_imagem(imagem, window):
     imagem.thumbnail((500,500))
     bio = io.BytesIO()
     imagem.save(bio, "PNG")
+    imagem.save("Imagens\\temp.png", format="PNG")
     window["imageKey"].update(data=bio.getvalue(), size=(500,500))
 
-def carrega_imagem(filename, window):
-    if os.path.exists(filename):
-        imagem = Image.open(filename)
-        mostrar_imagem(imagem, window)
+def LoadImage(filename, window):
+    imagem = OpenImage(filename)
+    mostrar_imagem(imagem, window)
 
-def abre_url(url, window):
-    imagem = abre_imagem(url)
+def SaveThumbnail(filename):
+    imagem = OpenImage(filename)
+    imagem.thumbnail((75,75))
+    imagem.save('Imagens\\thumbnail.png', format="PNG", optimize=True)
+
+def SaveLowQuality(filename, qualidade):
+    imagem = OpenImage(filename)
+    imagem.save("Imagens\\baixa_qualidade.jpg", format="JPEG", optimize=True, quality=int(qualidade))
+
+def Colors(input, window, quantidade):
+    imagem = OpenImage(input)
+    imagem = imagem.convert("P", palette=Image.Palette.ADAPTIVE, colors=quantidade)
     mostrar_imagem(imagem, window) 
 
-def salvar_url(url):
-    imagem = requests.get(url)
-    imagem = Image.open(io.BytesIO(imagem.content))
-    imagem.save("daweb.png", format="PNG", optimize=True)
-
-def Cores(imagemEntrada, imagemSaida, quantidade):
-    imagem = Image.open(imagemEntrada)
-    imagem = imagem.convert("P", palette=Image.Palette.ADAPTIVE, colors=quantidade)
-    imagem.save(imagemSaida)
-
-def BlackWhite(imagemEntrada, imagemSaida):
-    imagem = Image.open(imagemEntrada)
+def BlackWhite(input, window):
+    imagem = OpenImage(input)
     imagem = imagem.convert("L")
-    imagem.save(imagemSaida)
+    mostrar_imagem(imagem, window) 
 
-def calcula_paleta(branco):
+def CalculatePalette(branco):
     paleta = []
     r, g, b = branco
 
@@ -58,19 +58,19 @@ def calcula_paleta(branco):
         paleta.extend((newR, newG, newB))
     return paleta
 
-def converte_sepia(input, output):
+def ConvertSepia(input, window):
     branco = (255, 240, 192)
-    paleta = calcula_paleta(branco)
+    paleta = CalculatePalette(branco)
 
-    imagem = Image.open(input)
+    imagem = OpenImage(input)
     imagem = imagem.convert("L")
     imagem.putpalette(paleta)
 
     sepia = imagem.convert("RGB")
 
-    sepia.save(f"Imagens\{output}")
+    mostrar_imagem(sepia, window) 
 
-def escolhe_tema():
+def ChoiceTheme():
     sg.theme('DarkTeal9')
     
     layout = [
@@ -102,39 +102,60 @@ def escolhe_tema():
             sg.theme(values['ThemeList'][0])
             if sg.popup_yes_no("Aplicar esse tema?") == "Yes":
                 window.close()
+                return values['ThemeList'][0]
+
+def SetTheme(window, new_theme):
+    global CURRENT_THEME
+    CURRENT_THEME = new_theme
+    sg.theme(new_theme)
+    window.TKroot.config(background=sg.theme_background_color())
+    for element in window.element_list():
+        element.Widget.config(background=sg.theme_background_color())
+        element.ParentRowFrame.config(background=sg.theme_background_color())
+        if 'text' in str(type(element)).lower():
+            element.Widget.config(foreground=sg.theme_text_color())
+            element.Widget.config(background=sg.theme_text_element_background_color())
+        if 'input' in str(type(element)).lower():
+            element.Widget.config(foreground=sg.theme_input_text_color())
+            element.Widget.config(background=sg.theme_input_background_color())
+        if 'progress' in str(type(element)).lower():
+            element.Widget.config(foreground=sg.theme_progress_bar_color()[0])
+            element.Widget.config(background=sg.theme_progress_bar_color()[1])
+        if 'slider' in str(type(element)).lower():
+            element.Widget.config(foreground=sg.theme_slider_color())
+        if 'button' in str(type(element)).lower():
+            element.Widget.config(foreground=sg.theme_button_color()[0])
+            element.Widget.config(background=sg.theme_button_color()[1])
+    window.Refresh()
+
+def About():
+    sg.PopupOK('Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n' 
+    'Praesent mollis sem sed nunc dictum gravida. Proin elementum pellentesque dui, eget mollis est egestas ut. \n'
+    'Ut at urna quam. Sed in tellus massa. Nulla magna nulla, sodales id efficitur sit amet, fermentum eu nisl. \n'
+    'Aliquam lacinia nunc eget risus rhoncus malesuada. Donec ornare felis nec sapien pellentesque, in vestibulum velit efficitur. \n'
+    'Morbi consectetur pellentesque tortor ut viverra. \n'
+    'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.')
 
 def main():
     layout = [
         [sg.Menu([
                 ['File', 
-                    ['Open', 'Open URL', 'Save', 'Exit',]
+                    ['Open',
+                     'Save',
+                        ['Normal', 'Thumnail', 'Low Quality'],
+                     'Exit',]
                 ],
                 ['Edit', 
-                    ['Paste', 
-                        ['Special', 'Normal',], 
+                    ['Theme', 
+                     'Filter',
+                        ['no filter' , 'Sépia', 'Black and White', 'Colors'], 
                     'Undo'],
                 ],
-                ['Help', 'About...']
+                ['Help', 'About']
                 ])
         ],
         [
             sg.Image(key = "imageKey", size = (500, 500))
-        ],
-        [
-            sg.Text("Insira um Caminho para Imagem"),
-            sg.Input(size = (25,1), key = "fileKey"),
-            sg.FileBrowse(file_types = [("JPEG (*.jpg)", "*.jpg"), ("All", "*.*")]),
-            sg.Button("Load image")
-        ],
-        [
-            sg.Text("Salvar Imagem:")
-        ],        
-        [
-            sg.Text("Qualidade"),
-            sg.Combo(['Imagem Original', 'Thumnail', 'Qualidade Reduzida'], key = "qualityComb", enable_events = True),
-            sg.Text("Tamanho: "),
-            sg.Input(size = (5,1), key = "widthSave"),
-            sg.Input(size = (5,1), key = "heigthSave")
         ]
     ]
 
@@ -144,54 +165,67 @@ def main():
 
     while isScreenOpen: 
         event, value = window.read()
-        fileName = ""
 
         if event == "Open":
-            fileName = sg.popup_get_file('Get file')
-            carrega_imagem(fileName, window)
+            fileName = sg.popup_get_file('Paste a URL or search in the browser')
+            LoadImage(fileName, window)
+        
+        if event == "Theme":
+            SetTheme(window, ChoiceTheme())
 
-        if event == "Open URL":
-            fileName = sg.popup_get_text('Get URL')
+        if event == "no filter":            
             try:
-                abre_url(fileName,window)
+                LoadImage(fileName, window)
             except:
-                    sg.popup_ok("Não é um link valido")
+                sg.popup_ok("Fill a path")
 
-        
-        
-        """if value["qualityComb"] == "":
-            sg.popup_ok("Escolhe a qualidade da imagem")
-        elif value["qualityComb"] == "Imagem Original":
-                imagem.save("imagem.PNG")
-        elif value["qualityComb"] == "Thumnail":
-            imagem.save("temp.png", format="PNG", optimize=True, quality=1)
-            imagem.thumbnail((75,75))
-            imagem.save("imagem.PNG")
-        elif value["qualityComb"] == "Qualidade Reduzida":
-            if value["widthSave"] == "" or value["heigthSave"] == "":
-                sg.popup_ok("Preencha um tamanho")
-            else:
-                imagem.save("temp.png", format="PNG", optimize=True, quality=1)
-                imagem = imagem.resize((int(value["widthSave"]),int(value["heigthSave"])))
-                imagem.save("imagem.PNG")
-        
-        os.remove('temp.png')
+        if event == "Sépia":            
+            try:
+                ConvertSepia("Imagens\\temp.png", window)
+            except:
+                sg.popup_ok("Fill a path")
 
-        if event == "qualityComb":
-            if value["qualityComb"] == "Imagem Original":
-                window['widthSave'].update(disabled=True)
-                window['heigthSave'].update(disabled=True)
-            elif value["qualityComb"] == "Thumnail":
-                window['widthSave'].update(disabled=True)
-                window['heigthSave'].update(disabled=True)
-            elif value["qualityComb"] == "Qualidade Reduzida":  
-                window['widthSave'].update(disabled=False)
-                window['heigthSave'].update(disabled=False)"""
+        if event == "Black and White":
+            try:
+                BlackWhite("Imagens\\temp.png", window)
+            except:
+                sg.popup_ok("Fill a path")
+        
+        if event == "Colors":
+            try:
+                QtdColor = sg.popup_get_text('Set number of colors to filter your image')
+                Colors("Imagens\\temp.png", window, int(QtdColor))
+            except:
+                sg.popup_ok("Fill a path")
+            
+        if event == "Normal":
+            try:
+                imagem = OpenImage("Imagens\\temp.png")
+                imagem.save("Imagens\imagem.PNG")
+            except:
+                sg.popup_ok("Fill a path")
+        
+        if event == "Thumnail":
+            try:
+                SaveThumbnail("Imagens\\temp.png")
+            except:
+                sg.popup_ok("Fill a path")
+        
+        if event == "Low Quality":
+            try:
+                quality = sg.popup_get_text('Select image quality')
+                SaveLowQuality("Imagens\\temp.png", quality)
+            except:
+                sg.popup_ok("Fill a path")
+
+        if event == "About":
+            About()
 
         if event == "Exit" or event == sg.WINDOW_CLOSED:
             isScreenOpen = False
-
+    
     window.close()
+    os.remove('Imagens\\temp.png')
 
 if __name__ == "__main__":
     main()
