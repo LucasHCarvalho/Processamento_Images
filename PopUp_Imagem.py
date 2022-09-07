@@ -4,6 +4,73 @@ from pickletools import optimize
 import requests
 import PySimpleGUI as sg
 from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
+from pathlib import Path
+
+file_types = [("(JPEG (*.jpg)","*.jpg"),
+              ("All files (*.*)", "*.*")]
+
+fields = {
+    "File name" : "File name",
+    "File size" : "File size",
+    "Model" : "Camera Model",
+    "ExifImageWidth" : "Width",
+    "ExifImageHeight" : "Height",
+    "DateTime" : "Creating Date",
+    "static_line" : "*",
+    "MaxApertureValue" : "Aperture",
+    "ExposureTime" : "Exposure",
+    "FNumber" : "F-Stop",
+    "Flash" : "Flash",
+    "FocalLength" : "Focal Length",
+    "ISOSpeedRatings" : "ISO",
+    "ShutterSpeedValue" : "Shutter Speed"
+}
+
+def get_exif_data(path):
+    exif_data = {}
+    try:
+        image = Image.open(path)
+        info = image._getexif()
+    except OSError:
+        info = {}
+
+    #Se nÃ£o encontrar o arquivo
+    if info is None:
+        info = {}
+    for tag, value in info.items():
+        decoded = TAGS.get(tag, tag)
+        if decoded == "GPSInfo":
+            gps_data = {}
+            for gps_tag in value:
+                sub_decoded = GPSTAGS.get(gps_tag, gps_tag)
+                gps_data[sub_decoded] = value[gps_tag]
+            exif_data[decoded] = gps_data
+        else:
+            exif_data[decoded] = value
+
+    return exif_data
+
+def ImageInfos(filename):
+    layout = []
+
+    image_path = Path(filename)
+    exif_data = get_exif_data(image_path.absolute())
+
+    for ifield, field in enumerate(fields):
+        if field == "File name":
+            layout.append([sg.Text(fields[field], size=(10,1)), sg.Text(image_path.name, size=(25,1))])
+        elif field == "File size":
+            layout.append([sg.Text(fields[field], size=(10,1)), sg.Text(image_path.stat().st_size, size=(25,1))])
+        else:
+            layout.append([sg.Text(fields[field], size=(10,1)), sg.Text((exif_data.get(field, "No data")), size=(25,1))])
+
+    window = sg.Window("Image information", layout)
+
+    while True:
+        event, values = window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break     
 
 def OpenImage(filename):
     try:
@@ -70,9 +137,7 @@ def ConvertSepia(input, window):
 
     mostrar_imagem(sepia, window) 
 
-def ChoiceTheme():
-    sg.theme('DarkTeal9')
-    
+def ChoiceTheme():    
     layout = [
         [
             sg.Text('Escolha o tema da tela')
@@ -97,7 +162,7 @@ def ChoiceTheme():
         event, values = window.read()
         
         if event == "Exit" or event == sg.WINDOW_CLOSED:
-            isScreenOpen = False
+            window.close()
         else:  
             sg.theme(values['ThemeList'][0])
             if sg.popup_yes_no("Aplicar esse tema?") == "Yes":
@@ -151,7 +216,8 @@ def main():
                         ['no filter' , 'Sépia', 'Black and White', 'Colors'], 
                     'Undo'],
                 ],
-                ['Help', 'About']
+                ['Help', 'About'],
+                ['Infos', 'infos']
                 ])
         ],
         [
@@ -166,57 +232,42 @@ def main():
     while isScreenOpen: 
         event, value = window.read()
 
-        if event == "Open":
-            fileName = sg.popup_get_file('Paste a URL or search in the browser')
-            LoadImage(fileName, window)
-        
-        if event == "Theme":
-            SetTheme(window, ChoiceTheme())
-
-        if event == "no filter":            
-            try:
+        try:
+            if event == "Open":
+                fileName = sg.popup_get_file('Paste a URL or search in the browser')
                 LoadImage(fileName, window)
-            except:
-                sg.popup_ok("Fill a path")
-
-        if event == "Sépia":            
-            try:
-                ConvertSepia("Imagens\\temp.png", window)
-            except:
-                sg.popup_ok("Fill a path")
-
-        if event == "Black and White":
-            try:
-                BlackWhite("Imagens\\temp.png", window)
-            except:
-                sg.popup_ok("Fill a path")
-        
-        if event == "Colors":
-            try:
-                QtdColor = sg.popup_get_text('Set number of colors to filter your image')
-                Colors("Imagens\\temp.png", window, int(QtdColor))
-            except:
-                sg.popup_ok("Fill a path")
             
-        if event == "Normal":
-            try:
-                imagem = OpenImage("Imagens\\temp.png")
-                imagem.save("Imagens\imagem.PNG")
-            except:
-                sg.popup_ok("Fill a path")
-        
-        if event == "Thumnail":
-            try:
-                SaveThumbnail("Imagens\\temp.png")
-            except:
-                sg.popup_ok("Fill a path")
-        
-        if event == "Low Quality":
-            try:
+            if event == "Theme":
+                SetTheme(window, ChoiceTheme())
+
+            if event == "no filter":           
+                    LoadImage(fileName, window)
+
+            if event == "Sépia":          
+                    ConvertSepia("Imagens\\temp.png", window)
+
+            if event == "Black and White":
+                    BlackWhite("Imagens\\temp.png", window)
+            
+            if event == "Colors":
+                    QtdColor = sg.popup_get_text('Set number of colors to filter your image')
+                    Colors("Imagens\\temp.png", window, int(QtdColor))
+                
+            if event == "Normal":
+                    imagem = OpenImage("Imagens\\temp.png")
+                    imagem.save("Imagens\imagem.PNG")
+            
+            if event == "Thumnail":
+                    SaveThumbnail("Imagens\\temp.png")
+            
+            if event == "Low Quality":
                 quality = sg.popup_get_text('Select image quality')
-                SaveLowQuality("Imagens\\temp.png", quality)
-            except:
-                sg.popup_ok("Fill a path")
+                SaveLowQuality("Imagens\\temp.png", quality)     
+            
+            if event == "infos":
+                ImageInfos(fileName)
+        except Exception as e:
+                sg.popup_error(e)
 
         if event == "About":
             About()
