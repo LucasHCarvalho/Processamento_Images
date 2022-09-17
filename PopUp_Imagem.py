@@ -1,13 +1,17 @@
 import io
 import os
-from pickletools import optimize
+import sys
+import folium
 import requests
 import PySimpleGUI as sg
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from pathlib import Path
+from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
 
-file_types = [("(JPEG (*.jpg)","*.jpg"),
+file_types = [("(PNG (*.png)","*.png"),
+              ("(JPEG (*.jpg)","*.jpg"),
               ("All files (*.*)", "*.*")]
 
 fields = {
@@ -27,7 +31,45 @@ fields = {
     "ShutterSpeedValue" : "Shutter Speed"
 }
 
-def get_exif_data(path):
+class MyApp(QWidget):
+    def __init__(self, fileName):
+        super().__init__()
+        self.setWindowTitle('Folium in PyQt Example')
+        self.window_width, self.window_height = 600, 400
+        self.setMinimumSize(self.window_width, self.window_height)
+
+        layout = QVBoxLayout()
+        self.setLayout(layout)
+
+        coordinate = GeoInfo(fileName)
+        m = folium.Map(
+        	location=coordinate
+        )
+
+        # save map data to data object
+        data = io.BytesIO()
+        m.save(data, close_file=False)
+
+        webView = QWebEngineView()
+        webView.setHtml(data.getvalue().decode())
+        layout.addWidget(webView)
+
+def MapWindow(fileName):
+    app = QApplication(sys.argv)
+    app.setStyleSheet('''
+        QWidget {
+            font-size: 35px;
+        }
+    ''')
+    
+    myApp = MyApp(fileName)
+    myApp.show()
+
+    try:
+        sys.exit(app.exec_())
+    except SystemExit:
+        print('Closing Window...')
+def GetExifData(path):
     exif_data = {}
     try:
         image = Image.open(path)
@@ -51,13 +93,41 @@ def get_exif_data(path):
 
     return exif_data
 
+def GeoInfo(filename):
+    exif_data = {}
+    try:
+        image = Image.open(filename)
+        info = image._getexif()
+    except OSError:
+        info = {}
+
+    if info:
+        for tag, value in info.items():
+            decoded = TAGS.get(tag, tag)
+            if decoded == "GPSInfo":
+                gps_data = {}
+                for gps_tag in value:
+                    sub_decoded = GPSTAGS.get(gps_tag, gps_tag)
+                    gps_data[sub_decoded] = value[gps_tag]
+                exif_data[decoded] = gps_data
+            else:
+                exif_data[decoded] = value
+
+    north = exif_data["GPSInfo"]["GPSLatitude"]
+    east = exif_data["GPSInfo"]["GPSLongitude"]
+
+    latitude = float(((north[0] * 60 + north[1]) * 60 + north[2]) / 3600)
+    longitude = float(((east[0] * 60 + east[1]) * 60 + east[2]) / 3600)
+    print(latitude, longitude)
+    return latitude, longitude
+
 def ImageInfos(filename):
     layout = []
 
     image_path = Path(filename)
-    exif_data = get_exif_data(image_path.absolute())
+    exif_data = GetExifData(image_path.absolute())
 
-    for ifield, field in enumerate(fields):
+    for field in fields:
         if field == "File name":
             layout.append([sg.Text(fields[field], size=(10,1)), sg.Text(image_path.name, size=(25,1))])
         elif field == "File size":
@@ -217,7 +287,8 @@ def main():
                     'Undo'],
                 ],
                 ['Help', 'About'],
-                ['Infos', 'infos']
+                ['Informations', 
+                    ['Infos', 'Geo_Infos']]
                 ])
         ],
         [
@@ -234,7 +305,7 @@ def main():
 
         try:
             if event == "Open":
-                fileName = sg.popup_get_file('Paste a URL or search in the browser')
+                fileName = sg.popup_get_file('Paste a URL or search in the browser', file_types=file_types)
                 LoadImage(fileName, window)
             
             if event == "Theme":
@@ -264,8 +335,12 @@ def main():
                 quality = sg.popup_get_text('Select image quality')
                 SaveLowQuality("Imagens\\temp.png", quality)     
             
-            if event == "infos":
-                ImageInfos(fileName)
+            if event == "Infos":
+               ImageInfos(fileName)
+
+            if event == "Geo_Infos":
+                MapWindow(fileName)
+
         except Exception as e:
                 sg.popup_error(e)
 
