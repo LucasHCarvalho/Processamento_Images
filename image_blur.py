@@ -7,4 +7,4 @@ def filter(input_image, output_image):
     filtered_image.save(output_image)
 
 if __name__ == "__main__":
-    filter("blur.png", "blur1.png")
+    filter("Imagens\\house.jpg", "Imagens\\blur1.png")

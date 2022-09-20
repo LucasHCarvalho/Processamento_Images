@@ -3,13 +3,14 @@ import os
 import sys
 import folium
 import requests
+import webbrowser
 import PySimpleGUI as sg
+from PIL import ImageFilter
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
-import webbrowser
 
 file_types = [("(PNG (*.png)","*.png"),
               ("(JPEG (*.jpg)","*.jpg"),
@@ -32,6 +33,103 @@ fields = {
     "ShutterSpeedValue" : "Shutter Speed"
 }
 
+filtros = {
+        'blur': ImageFilter.BLUR,
+        'BoxBlur': ImageFilter.BoxBlur(radius=9),
+        'GaussianBlur': ImageFilter.GaussianBlur,
+        'Contour': ImageFilter.CONTOUR,
+        'Detail': ImageFilter.DETAIL,
+        'Edge Enhance': ImageFilter.EDGE_ENHANCE,
+        'Emboss': ImageFilter.EMBOSS,
+        'Find Edges': ImageFilter.FIND_EDGES,
+        'Sharpen': ImageFilter.SHARPEN,
+        'Smooth': ImageFilter.SMOOTH
+    }
+
+"""
+    Padrão para carregar, abrir e mostrar na tela
+"""
+def OpenImage(filename): 
+    try:
+        if os.path.exists(filename):
+            imagem = Image.open(filename)
+        else: 
+            imagem = requests.get(filename)
+            imagem = Image.open(io.BytesIO(imagem.content))
+        
+        return imagem
+    except:
+        sg.popup_ok("Fill a path")
+    
+def mostrar_imagem(imagem, window):
+    imagem.thumbnail((500,500))
+    bio = io.BytesIO()
+    imagem.save(bio, "PNG")
+    imagem.save("Imagens\\temp.png", format="PNG")
+    window["imageKey"].update(data=bio.getvalue(), size=(500,500))
+
+def LoadImage(filename, window):
+    imagem = OpenImage(filename)
+    mostrar_imagem(imagem, window)
+
+
+"""
+    Formas de Salvar
+"""
+def SaveThumbnail(filename):
+    imagem = OpenImage(filename)
+    imagem.thumbnail((75,75))
+    imagem.save('Imagens\\thumbnail.png', format="PNG", optimize=True)
+
+def SaveLowQuality(filename, qualidade):
+    imagem = OpenImage(filename)
+    imagem.save("Imagens\\baixa_qualidade.jpg", format="JPEG", optimize=True, quality=int(qualidade))
+
+
+"""
+    Filtros
+"""
+def Colors(input, window, quantidade):
+    imagem = OpenImage(input)
+    imagem = imagem.convert("P", palette=Image.Palette.ADAPTIVE, colors=quantidade)
+    mostrar_imagem(imagem, window) 
+
+def BlackWhite(input, window):
+    imagem = OpenImage(input)
+    imagem = imagem.convert("L")
+    mostrar_imagem(imagem, window) 
+
+def CalculatePalette(branco):
+    paleta = []
+    r, g, b = branco
+
+    for i in range(255):
+        newR = r * i // 255
+        newG = g * i // 255
+        newB = b * i // 255
+        paleta.extend((newR, newG, newB))
+    return paleta
+
+def ConvertSepia(input, window):
+    branco = (255, 240, 192)
+    paleta = CalculatePalette(branco)
+
+    imagem = OpenImage(input)
+    imagem = imagem.convert("L")
+    imagem.putpalette(paleta)
+
+    sepia = imagem.convert("RGB")
+
+    mostrar_imagem(sepia, window) 
+
+def filter(imagem,filter,window):
+        imagem = OpenImage(imagem)
+        filtered_image = imagem.filter(filtros[filter])
+        mostrar_imagem(filtered_image, window) 
+
+"""
+    Localização mapa
+"""
 class MyApp(QWidget):
     def __init__(self, fileName):
         super().__init__()
@@ -130,6 +228,9 @@ def GeoInfo(filename):
         #return latitude, -longitude
         webbrowser.open(f'http://maps.google.com/maps?q={latitude}, -{longitude}')
 
+"""
+    Informações da Imagem
+"""
 def ImageInfos(filename):
     layout = []
 
@@ -151,70 +252,6 @@ def ImageInfos(filename):
         if event == "Exit" or event == sg.WIN_CLOSED:
             break     
 
-def OpenImage(filename):
-    try:
-        if os.path.exists(filename):
-            imagem = Image.open(filename)
-        else: 
-            imagem = requests.get(filename)
-            imagem = Image.open(io.BytesIO(imagem.content))
-        
-        return imagem
-    except:
-        sg.popup_ok("Fill a path")
-    
-def mostrar_imagem(imagem, window):
-    imagem.thumbnail((500,500))
-    bio = io.BytesIO()
-    imagem.save(bio, "PNG")
-    imagem.save("Imagens\\temp.png", format="PNG")
-    window["imageKey"].update(data=bio.getvalue(), size=(500,500))
-
-def LoadImage(filename, window):
-    imagem = OpenImage(filename)
-    mostrar_imagem(imagem, window)
-
-def SaveThumbnail(filename):
-    imagem = OpenImage(filename)
-    imagem.thumbnail((75,75))
-    imagem.save('Imagens\\thumbnail.png', format="PNG", optimize=True)
-
-def SaveLowQuality(filename, qualidade):
-    imagem = OpenImage(filename)
-    imagem.save("Imagens\\baixa_qualidade.jpg", format="JPEG", optimize=True, quality=int(qualidade))
-
-def Colors(input, window, quantidade):
-    imagem = OpenImage(input)
-    imagem = imagem.convert("P", palette=Image.Palette.ADAPTIVE, colors=quantidade)
-    mostrar_imagem(imagem, window) 
-
-def BlackWhite(input, window):
-    imagem = OpenImage(input)
-    imagem = imagem.convert("L")
-    mostrar_imagem(imagem, window) 
-
-def CalculatePalette(branco):
-    paleta = []
-    r, g, b = branco
-
-    for i in range(255):
-        newR = r * i // 255
-        newG = g * i // 255
-        newB = b * i // 255
-        paleta.extend((newR, newG, newB))
-    return paleta
-
-def ConvertSepia(input, window):
-    branco = (255, 240, 192)
-    paleta = CalculatePalette(branco)
-
-    imagem = OpenImage(input)
-    imagem = imagem.convert("L")
-    imagem.putpalette(paleta)
-
-    sepia = imagem.convert("RGB")
-
-    mostrar_imagem(sepia, window) 
 
 def ChoiceTheme():    
     layout = [
@@ -291,8 +328,10 @@ def main():
                 ],
                 ['Edit', 
                     ['Theme', 
-                     'Filter',
-                        ['no filter' , 'Sépia', 'Black and White', 'Colors'], 
+                     'Style',
+                        ['no Style' , 'Sépia', 'Black and White', 'Colors'], 
+                     'Filters',
+                        ['blur', 'BoxBlur', 'GaussianBlur', 'Contour', 'Detail', 'Edge Enhance', 'Emboss', 'Find Edges', 'Sharpen', 'Smooth'],
                     'Undo'],
                 ],
                 ['Help', 'About'],
@@ -334,7 +373,7 @@ def main():
                     Colors("Imagens\\temp.png", window, int(QtdColor))
                 
             if event == "Normal":
-                    imagem = OpenImage("Imagens\\temp.png")
+                    imagem = OpenImage("Imagens\\temp.png")     
                     imagem.save("Imagens\imagem.PNG")
             
             if event == "Thumnail":
@@ -349,6 +388,36 @@ def main():
 
             if event == "Geo_Infos":
                 GeoInfo(fileName)
+            
+            if event == "SBlur":
+                filter("Imagens\\temp.png",'blur',window)
+
+            if event == "BoxBlur":
+                filter("Imagens\\temp.png",'BoxBlur',window)
+
+            if event == "GaussianBlur":
+                filter("Imagens\\temp.png",'GaussianBlur',window)
+
+            if event == "Contour":
+                filter("Imagens\\temp.png",'Contour',window)
+
+            if event == "Find Edges":
+                filter("Imagens\\temp.png",'Find Edges',window)
+
+            if event == "Detail":
+                filter("Imagens\\temp.png",'Detail',window)
+
+            if event == "Edge Enhance":
+                filter("Imagens\\temp.png",'Edge Enhance',window)
+
+            if event == "Emboss":
+                filter("Imagens\\temp.png",'Emboss',window)
+
+            if event == "Sharpen":
+                filter("Imagens\\temp.png",'Sharpen',window)
+
+            if event == "Smooth":
+                filter("Imagens\\temp.png",'Smooth',window)
 
         except Exception as e:
                 sg.popup_error(e)
