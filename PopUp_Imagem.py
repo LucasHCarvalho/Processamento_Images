@@ -9,6 +9,7 @@ from PIL.ExifTags import TAGS, GPSTAGS
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
+import webbrowser
 
 file_types = [("(PNG (*.png)","*.png"),
               ("(JPEG (*.jpg)","*.jpg"),
@@ -34,7 +35,7 @@ fields = {
 class MyApp(QWidget):
     def __init__(self, fileName):
         super().__init__()
-        self.setWindowTitle('Folium in PyQt Example')
+        self.setWindowTitle('Localização')
         self.window_width, self.window_height = 600, 400
         self.setMinimumSize(self.window_width, self.window_height)
 
@@ -45,6 +46,12 @@ class MyApp(QWidget):
         m = folium.Map(
         	location=coordinate
         )
+
+        tooltip = "Location"
+
+        folium.Marker(
+            coordinate, tooltip=tooltip
+        ).add_to(m)
 
         # save map data to data object
         data = io.BytesIO()
@@ -69,6 +76,7 @@ def MapWindow(fileName):
         sys.exit(app.exec_())
     except SystemExit:
         print('Closing Window...')
+
 def GetExifData(path):
     exif_data = {}
     try:
@@ -118,8 +126,9 @@ def GeoInfo(filename):
 
     latitude = float(((north[0] * 60 + north[1]) * 60 + north[2]) / 3600)
     longitude = float(((east[0] * 60 + east[1]) * 60 + east[2]) / 3600)
-    print(latitude, longitude)
-    return latitude, longitude
+    if sg.popup_yes_no(f'http://maps.google.com/maps?q={latitude}, -{longitude}') == "Yes":
+        #return latitude, -longitude
+        webbrowser.open(f'http://maps.google.com/maps?q={latitude}, -{longitude}')
 
 def ImageInfos(filename):
     layout = []
@@ -339,7 +348,7 @@ def main():
                ImageInfos(fileName)
 
             if event == "Geo_Infos":
-                MapWindow(fileName)
+                GeoInfo(fileName)
 
         except Exception as e:
                 sg.popup_error(e)
