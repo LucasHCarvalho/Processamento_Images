@@ -46,6 +46,12 @@ filtros = {
         'Smooth': ImageFilter.SMOOTH
     }
 
+mirror_options = {
+        "FLIP_LEFT_RIGHT": Image.Transpose.FLIP_LEFT_RIGHT,
+        "FLIP_TOP_BOTTOM": Image.Transpose.FLIP_TOP_BOTTOM,
+        "TRANSPOSE": Image.Transpose.TRANSPOSE
+    }
+
 """
     Padrão para carregar, abrir e mostrar na tela
 """
@@ -126,6 +132,20 @@ def filter(imagem,filter,window):
         imagem = OpenImage(imagem)
         filtered_image = imagem.filter(filtros[filter])
         mostrar_imagem(filtered_image, window) 
+
+
+"""
+    Edições
+"""
+def rotate(image_path, degrees_to_rotate, window):
+    image_obj = OpenImage(image_path)
+    rotated_image = image_obj.rotate(degrees_to_rotate)
+    mostrar_imagem(rotated_image, window) 
+
+def mirror(image_path, mirrors, window):
+    image = OpenImage(image_path)
+    mirror_image = image.transpose(mirror_options[mirrors]) #FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM, TRANSPOSE
+    mostrar_imagem(mirror_image, window) 
 
 """
     Localização mapa
@@ -332,6 +352,10 @@ def main():
                         ['no Style' , 'Sépia', 'Black and White', 'Colors'], 
                      'Filters',
                         ['blur', 'BoxBlur', 'GaussianBlur', 'Contour', 'Detail', 'Edge Enhance', 'Emboss', 'Find Edges', 'Sharpen', 'Smooth'],
+                     'Rotate',
+                        ['Rotate -90°', 'Rotate 90°', 'Rotate 180°'],
+                     'Miror',
+                        ['FLIP_LEFT_RIGHT', 'FLIP_TOP_BOTTOM', 'TRANSPOSE'],
                     'Undo'],
                 ],
                 ['Help', 'About'],
@@ -418,6 +442,24 @@ def main():
 
             if event == "Smooth":
                 filter("Imagens\\temp.png",'Smooth',window)
+
+            if event == "Rotate -90°":
+                rotate("Imagens\\temp.png", -90, window)
+
+            if event == "Rotate 90°":
+                rotate("Imagens\\temp.png", 90, window)
+
+            if event == "Rotate 180°":
+                rotate("Imagens\\temp.png", 180, window)
+
+            if event == "FLIP_LEFT_RIGHT":
+                mirror("Imagens\\temp.png", "FLIP_LEFT_RIGHT", window)
+
+            if event == "FLIP_TOP_BOTTOM":
+                mirror("Imagens\\temp.png", "FLIP_TOP_BOTTOM", window)
+
+            if event == "TRANSPOSE":
+                mirror("Imagens\\temp.png", "TRANSPOSE", window)
 
         except Exception as e:
                 sg.popup_error(e)
