@@ -53,7 +53,7 @@ mirror_options = {
     }
 
 """
-    Padrão para carregar, abrir e mostrar na tela
+    PadrÃ£o para carregar, abrir e mostrar na tela
 """
 def OpenImage(filename): 
     try:
@@ -135,7 +135,7 @@ def filter(imagem,filter,window):
 
 
 """
-    Edições
+    EdiÃ§Ãµes
 """
 def rotate(image_path, degrees_to_rotate, window):
     image_obj = OpenImage(image_path)
@@ -148,12 +148,12 @@ def mirror(image_path, mirrors, window):
     mostrar_imagem(mirror_image, window) 
 
 """
-    Localização mapa
+    LocalizaÃ§Ã£o mapa
 """
 class MyApp(QWidget):
     def __init__(self, fileName):
         super().__init__()
-        self.setWindowTitle('Localização')
+        self.setWindowTitle('LocalizaÃ§Ã£o')
         self.window_width, self.window_height = 600, 400
         self.setMinimumSize(self.window_width, self.window_height)
 
@@ -203,7 +203,7 @@ def GetExifData(path):
     except OSError:
         info = {}
 
-    #Se nÃ£o encontrar o arquivo
+    #Se nÃƒÂ£o encontrar o arquivo
     if info is None:
         info = {}
     for tag, value in info.items():
@@ -249,7 +249,7 @@ def GeoInfo(filename):
         webbrowser.open(f'http://maps.google.com/maps?q={latitude}, -{longitude}')
 
 """
-    Informações da Imagem
+    InformaÃ§Ãµes da Imagem
 """
 def ImageInfos(filename):
     layout = []
