@@ -21,6 +21,8 @@ def main():
                         ['no Style' , 'Sépia', 'Black and White', 'Colors'], 
                      'Filters',
                         ['blur', 'BoxBlur', 'GaussianBlur', 'Contour', 'Detail', 'Edge Enhance', 'Emboss', 'Find Edges', 'Sharpen', 'Smooth'],
+                    'Efects',
+                        ['brightness', 'contrast', 'enhance', 'sharpness'],
                      'Rotate',
                         ['Rotate -90°', 'Rotate 90°', 'Rotate 180°'],
                      'Miror',
@@ -67,7 +69,7 @@ def main():
                 
             if event == "Normal":
                     imagem = OpenImage("Imagens\\temp.png")     
-                    imagem.save("Imagens\imagem.PNG")
+                    imagem.save("Imagens\imagem{Time()}.PNG")
             
             if event == "Thumnail":
                     SaveThumbnail("Imagens\\temp.png")
@@ -111,6 +113,18 @@ def main():
 
             if event == "Smooth":
                 filter("Imagens\\temp.png", 'Smooth', window)
+                
+            if event == "brightness":
+                brilho("Imagens\\temp.png", 'blur', window)
+
+            if event == "contrast":
+                contraste("Imagens\\temp.png", 'blur', window)
+
+            if event == "enhance":
+                cores("Imagens\\temp.png", 'blur', window)
+
+            if event == "sharpness":
+                nitidez("Imagens\\temp.png", 'blur', window)
 
             if event == "Rotate -90°":
                 rotate("Imagens\\temp.png", -90, window)

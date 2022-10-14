@@ -5,12 +5,12 @@ import folium
 import requests
 import webbrowser
 import PySimpleGUI as sg
-from PIL import ImageFilter
-from PIL import Image
+from PIL import ImageFilter, Image, ImageEnhance
 from PIL.ExifTags import TAGS, GPSTAGS
 from pathlib import Path
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
+from datetime import datetime, date
 
 file_types = [("(PNG (*.png)","*.png"),
               ("(JPEG (*.jpg)","*.jpg"),
@@ -52,6 +52,12 @@ mirror_options = {
         "TRANSPOSE": Image.Transpose.TRANSPOSE
     }
 
+
+def Time():
+    now = datetime.now()
+    current_time = now.strftime("%H-%M")
+    return "-" + date.today() + "-" + current_time
+
 """
     Padrão para carregar, abrir e mostrar na tela
 """
@@ -77,20 +83,18 @@ def mostrar_imagem(imagem, window):
 def LoadImage(filename, window):
     imagem = OpenImage(filename)
     mostrar_imagem(imagem, window)
-
-
+    
 """
     Formas de Salvar
 """
 def SaveThumbnail(filename):
     imagem = OpenImage(filename)
     imagem.thumbnail((75,75))
-    imagem.save('Imagens\\thumbnail.png', format="PNG", optimize=True)
+    imagem.save(f'Imagens\\thumbnail.png{Time()}', format="PNG", optimize=True)
 
 def SaveLowQuality(filename, qualidade):
     imagem = OpenImage(filename)
-    imagem.save("Imagens\\baixa_qualidade.jpg", format="JPEG", optimize=True, quality=int(qualidade))
-
+    imagem.save(f"Imagens\\baixa_qualidade{Time()}.png", format="PNG", optimize=True, quality=int(qualidade))
 
 """
     Filtros
@@ -133,6 +137,32 @@ def filter(imagem,filter,window):
         filtered_image = imagem.filter(filtros[filter])
         mostrar_imagem(filtered_image, window) 
 
+"""
+    Efeitos
+"""
+def brilho(imagem, fator, window):
+    imagem = OpenImage(imagem)
+    enhancer = ImageEnhance.Brightness(imagem)
+    edit_image = enhancer.enhance(fator)
+    mostrar_imagem(edit_image, window) 
+
+def contraste(imagem, fator, window):
+    imagem = OpenImage(imagem)
+    enhancer = ImageEnhance.Contrast(imagem)
+    edit_image = enhancer.enhance(fator)
+    mostrar_imagem(edit_image, window) 
+
+def cores(imagem, fator, window):
+    imagem = OpenImage(imagem)
+    enhancer = ImageEnhance.Color(imagem)
+    edit_image = enhancer.enhance(fator)
+    mostrar_imagem(edit_image, window) 
+
+def nitidez(imagem, fator, window):
+    imagem = OpenImage(imagem)
+    enhancer = ImageEnhance.Sharpness(imagem)
+    edit_image = enhancer.enhance(fator)
+    mostrar_imagem(edit_image, window) 
 
 """
     Edições
@@ -334,4 +364,4 @@ def About():
     'Trabalho desenvolvido no curso de Ciência da Computação na disciplina de Processamento de Imagens, lecionado pelo professor Thiago Quintas.\n'
     'O projeto busca com auxilio de algumas funções mostar funções e meios para tratar imagens.\n'
     'o projeto foi desenvolvido em Python por: Lucas Henrique de Carvalho Pinto\n'
-    f'O código do projeto se encontra em: https://github.com/LucasHCarvalho/Processamento_Images')
+    'O código do projeto se encontra em: https://github.com/LucasHCarvalho/Processamento_Images')
