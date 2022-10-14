@@ -330,9 +330,8 @@ def SetTheme(window, new_theme):
     window.Refresh()
 
 def About():
-    sg.PopupOK('Lorem ipsum dolor sit amet, consectetur adipiscing elit. \n' 
-    'Praesent mollis sem sed nunc dictum gravida. Proin elementum pellentesque dui, eget mollis est egestas ut. \n'
-    'Ut at urna quam. Sed in tellus massa. Nulla magna nulla, sodales id efficitur sit amet, fermentum eu nisl. \n'
-    'Aliquam lacinia nunc eget risus rhoncus malesuada. Donec ornare felis nec sapien pellentesque, in vestibulum velit efficitur. \n'
-    'Morbi consectetur pellentesque tortor ut viverra. \n'
-    'Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.')
+    sg.PopupOK('***Oláa***\n'
+    'Trabalho desenvolvido no curso de Ciência da Computação na disciplina de Processamento de Imagens, lecionado pelo professor Thiago Quintas.\n'
+    'O projeto busca com auxilio de algumas funções mostar funções e meios para tratar imagens.\n'
+    'o projeto foi desenvolvido em Python por: Lucas Henrique de Carvalho Pinto\n'
+    f'O código do projeto se encontra em: https://github.com/LucasHCarvalho/Processamento_Images')

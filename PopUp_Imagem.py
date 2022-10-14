@@ -1,17 +1,6 @@
-import io
 import os
-import sys
-import folium
-import requests
-import webbrowser
 import PySimpleGUI as sg
-from PIL import ImageFilter
-from PIL import Image
-from PIL.ExifTags import TAGS, GPSTAGS
-from pathlib import Path
-from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout
-from PyQt5.QtWebEngineWidgets import QWebEngineView # pip install PyQtWebEngine
-from funoces import *
+from funcoes import *
 
 file_types = [("(PNG (*.png)","*.png"),
               ("(JPEG (*.jpg)","*.jpg"),
@@ -44,7 +33,7 @@ def main():
                 ])
         ],
         [
-            sg.Image(key = "imageKey", size = (500, 500))
+            sg.Image(key = "imageKey", size = (800, 800))
         ]
     ]
 
@@ -94,34 +83,34 @@ def main():
                 GeoInfo(fileName)
             
             if event == "SBlur":
-                filter("Imagens\\temp.png",'blur',window)
+                filter("Imagens\\temp.png", 'blur', window)
 
             if event == "BoxBlur":
-                filter("Imagens\\temp.png",'BoxBlur',window)
+                filter("Imagens\\temp.png", 'BoxBlur', window)
 
             if event == "GaussianBlur":
-                filter("Imagens\\temp.png",'GaussianBlur',window)
+                filter("Imagens\\temp.png", 'GaussianBlur', window)
 
             if event == "Contour":
-                filter("Imagens\\temp.png",'Contour',window)
+                filter("Imagens\\temp.png", 'Contour', window)
 
             if event == "Find Edges":
-                filter("Imagens\\temp.png",'Find Edges',window)
+                filter("Imagens\\temp.png", 'Find Edges', window)
 
             if event == "Detail":
-                filter("Imagens\\temp.png",'Detail',window)
+                filter("Imagens\\temp.png", 'Detail', window)
 
             if event == "Edge Enhance":
-                filter("Imagens\\temp.png",'Edge Enhance',window)
+                filter("Imagens\\temp.png", 'Edge Enhance', window)
 
             if event == "Emboss":
-                filter("Imagens\\temp.png",'Emboss',window)
+                filter("Imagens\\temp.png", 'Emboss', window)
 
             if event == "Sharpen":
-                filter("Imagens\\temp.png",'Sharpen',window)
+                filter("Imagens\\temp.png", 'Sharpen', window)
 
             if event == "Smooth":
-                filter("Imagens\\temp.png",'Smooth',window)
+                filter("Imagens\\temp.png", 'Smooth', window)
 
             if event == "Rotate -90°":
                 rotate("Imagens\\temp.png", -90, window)
