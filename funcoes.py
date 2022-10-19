@@ -74,11 +74,12 @@ def OpenImage(filename):
         sg.popup_ok("Fill a path")
     
 def mostrar_imagem(imagem, window):
+    window["imageKey"].erase()
+    imagem.save("Imagens\\temp.png", format="PNG")
     imagem.thumbnail((500,500))
     bio = io.BytesIO()
     imagem.save(bio, "PNG")
-    imagem.save("Imagens\\temp.png", format="PNG")
-    window["imageKey"].update(data=bio.getvalue(), size=(500,500))
+    window["imageKey"].draw_image(data=bio.getvalue(), location=(0,500))
 
 def LoadImage(filename, window):
     imagem = OpenImage(filename)
