@@ -74,12 +74,12 @@ def OpenImage(filename):
         sg.popup_ok("Fill a path")
     
 def mostrar_imagem(imagem, window):
-    window["imageKey"].erase()
     imagem.save("Imagens\\temp.png", format="PNG")
-    imagem.thumbnail((500,500))
+    imagem.thumbnail((800,800))
     bio = io.BytesIO()
     imagem.save(bio, "PNG")
-    window["imageKey"].draw_image(data=bio.getvalue(), location=(0,500))
+    window["imageKey"].erase()
+    window["imageKey"].draw_image(data=bio.getvalue(), location=(0,800))
 
 def LoadImage(filename, window):
     imagem = OpenImage(filename)
@@ -143,24 +143,28 @@ def filter(imagem,filter,window):
 """
 def brilho(imagem, fator, window):
     imagem = OpenImage(imagem)
+    imagem.convert("RGB")
     enhancer = ImageEnhance.Brightness(imagem)
     edit_image = enhancer.enhance(fator)
     mostrar_imagem(edit_image, window) 
 
 def contraste(imagem, fator, window):
     imagem = OpenImage(imagem)
+    imagem = imagem.convert("RGB")
     enhancer = ImageEnhance.Contrast(imagem)
     edit_image = enhancer.enhance(fator)
     mostrar_imagem(edit_image, window) 
 
 def cores(imagem, fator, window):
     imagem = OpenImage(imagem)
+    imagem = imagem.convert("RGB")
     enhancer = ImageEnhance.Color(imagem)
     edit_image = enhancer.enhance(fator)
     mostrar_imagem(edit_image, window) 
 
 def nitidez(imagem, fator, window):
     imagem = OpenImage(imagem)
+    imagem = imagem.convert("RGB")
     enhancer = ImageEnhance.Sharpness(imagem)
     edit_image = enhancer.enhance(fator)
     mostrar_imagem(edit_image, window) 

@@ -35,7 +35,8 @@ def main():
                 ])
         ],
         [
-            sg.Image(key = "imageKey", size = (800, 800))
+            sg.Graph(key="imageKey", canvas_size=(800,800), graph_bottom_left=(0, 0),
+                 graph_top_right=(800, 800), change_submits=True, drag_submits=True)
         ]
     ]
 
@@ -115,16 +116,20 @@ def main():
                 filter("Imagens\\temp.png", 'Smooth', window)
                 
             if event == "brightness":
-                brilho("Imagens\\temp.png", 'blur', window)
+                val = int(sg.popup_get_text('Informe o valor'))
+                brilho("Imagens\\temp.png", val, window)
 
             if event == "contrast":
-                contraste("Imagens\\temp.png", 'blur', window)
+                val = int(sg.popup_get_text('Informe o valor'))
+                contraste("Imagens\\temp.png", val, window)
 
             if event == "enhance":
-                cores("Imagens\\temp.png", 'blur', window)
+                val = int(sg.popup_get_text('Informe o valor'))
+                cores("Imagens\\temp.png", val, window)
 
             if event == "sharpness":
-                nitidez("Imagens\\temp.png", 'blur', window)
+                val = int(sg.popup_get_text('Informe o valor'))
+                nitidez("Imagens\\temp.png", val, window)
 
             if event == "Rotate -90°":
                 rotate("Imagens\\temp.png", -90, window)
